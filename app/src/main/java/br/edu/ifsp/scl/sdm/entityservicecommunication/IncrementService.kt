@@ -10,25 +10,25 @@ import android.os.Message
 
 class IncrementService : Service() {
 
-
-    private inner class IncrementHandler(looper: Looper): Handler(looper){
-
+    private inner class IncrementHandler(looper: Looper): Handler(looper) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
             msg.data.getInt("VALUE").also {
-                InterEntityCommunication.valueLiveData.postValue(it + 1)
+                Intent("INCREMENT_VALUE_ACTION").putExtra("VALUE", it + 1).apply {
+                    sendBroadcast(this)
+                }
             }
             stopSelf()
         }
-
     }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        intent?.getIntExtra("VALUE", -1)?.also { value ->
+        intent?.getIntExtra("VALUE", 1)?.also { value ->
             HandlerThread("IncrementThread").apply {
                 start()
                 IncrementHandler(looper).apply {
                     obtainMessage().apply {
-                        data.putInt("VALUE",value)
+                        data.putInt("VALUE", value)
                         sendMessage(this)
                     }
                 }
@@ -36,7 +36,5 @@ class IncrementService : Service() {
         }
         return START_NOT_STICKY
     }
-
-
     override fun onBind(intent: Intent): IBinder? = null
 }
